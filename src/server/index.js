@@ -2,7 +2,12 @@ import '@soundworks/helpers/polyfills.js';
 import { Server } from '@soundworks/core/server.js';
 import { loadConfig } from '@soundworks/helpers/node.js';
 
+import pluginPlatformInit from '@soundworks/plugin-platform-init/server.js';
+
 import '../utils/catch-unhandled-errors.js';
+
+import globalSchema from './schemas/global.js';
+import playerSchema from './schemas/player.js';
 
 // - General documentation: https://soundworks.dev/
 // - API documentation:     https://soundworks.dev/api
@@ -25,9 +30,13 @@ const server = new Server(config);
 // configure the server for usage within this application template
 server.useDefaultApplicationTemplate();
 
+server.pluginManager.register('platform-init', pluginPlatformInit); 
+
 /**
  * Register plugins and schemas
  */
+server.stateManager.registerSchema('global', globalSchema);
+server.stateManager.registerSchema('player', playerSchema);
 // server.pluginManager.register('my-plugin', plugin);
 // server.stateManager.registerSchema('my-schema', definition);
 
@@ -35,6 +44,9 @@ server.useDefaultApplicationTemplate();
  * Launch application (init plugins, http server, etc.)
  */
 await server.start();
+
+const global = await server.stateManager.create('global');
+console.log(global.getValues());
 
 // and do your own stuff!
 
