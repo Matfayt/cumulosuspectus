@@ -12,7 +12,11 @@ import '../components/sw-player.js';
 import player from '../../server/schemas/player.js';
 
 // import { AudioContext, GainNode, OscillatorNode } from 'node-web-audio-api';
-// import { AudioBufferLoader } from '@ircam/sc-loader'; 
+import { Scheduler } from '@ircam/sc-scheduling'; 
+import { AudioBufferLoader } from '@ircam/sc-loader';
+
+import loadAudioBuffer from './load-audio-buffer.js';
+
 import GranularSynth from './GranularSynth.js';
 import FeedbackDelay from './FeedbackDelay.js';
 
@@ -25,7 +29,8 @@ import FeedbackDelay from './FeedbackDelay.js';
 /**
  * If multiple clients are emulated you might to want to share some resources
  */
-// const audioContext = new AudioContext();
+
+const audioContext = new AudioContext();
 const config = window.SOUNDWORKS_CONFIG;
 const client = new Client(config);
 
@@ -33,12 +38,6 @@ async function main($container) {
   /**
    * Load configuration from config files and create the soundworks client
    */
-  const config = loadConfig();
-  const client = new Client(config);
-
-  client.pluginManager.register('platform-init', pluginPlatformInit, {  
-    audioContext  
-  });
 
   /**
    * Register some soundworks plugins, you will need to install the plugins
@@ -77,15 +76,15 @@ async function main($container) {
     id: client.id,
   });
 
-  const audioContext = new AudioContext();
+  //resume audiocontext with user gesture
+  client.pluginManager.register('platform-init', pluginPlatformInit, {  
+    audioContext  
+  }); 
+
 
   // //from master to ...
   const master = audioContext.createGain(); 
   master.gain.value = global.get('master');
-
-  // MULTIPLE OUTPUT
-  // master.connect(merger, 0, id % 32); //for multichannel output (32 max)
-  // audioContext.maxChannelCount = 2;
 
   // SIMPLE OUTPUT
   master.connect(audioContext.destination) // for simple output
@@ -105,15 +104,20 @@ async function main($container) {
   // mute.connect(reverb);
   mute.connect(delay.input);
 
-  const soundFiles = [
-    'public/assets/river.wav',
-    'public/assets/burn.wav',
-    'public/assets/clang.wav',
-  ];
+  // const soundFiles = [
+  //   '/public/assets/river.wav',
+  //   '/public/assets/burn.wav',
+  //   '/public/assets/clang.wav',
+  // ];
 
   // Load the actual buffers
-  const loaderAudio = new AudioBufferLoader(audioContext.sampleRate); //evryone at 48000
-  const soundBuffer = await loaderAudio.load(soundFiles);
+  // const loaderAudio = new AudioBufferLoader(audioContext.sampleRate); //evryone at 48000
+  // const soundBuffer = await loaderAudio.load(soundFiles);
+
+  // const loaderAudio = new loadAudioBuffer(audioContext.sampleRate); //evryone at 48000
+  const soundBuffer = await loadAudioBuffer('./assets/river.wav');
+  // const soundBuffer = [0, 1, 0];
+
 
   // Name to index for easy manipulation with interface (player.get(string))
   const sounds = {
@@ -128,6 +132,7 @@ async function main($container) {
   const granular = new GranularSynth(audioContext, soundBuffer);
   // Set a default value so it can read one at init 
   granular.soundBuffer = soundBuffer[0]; 
+  granular.soundBuffer = soundBuffer; 
   // Connect it to mute (output) 
   granular.output.connect(mute);
   // granular.energy = energy;
@@ -145,37 +150,39 @@ async function main($container) {
   ];
 
   // const loader = new AudioBufferLoader({ sampleRate: 48000 }); //same sample rate for everyone
-  const envBuffers = await loaderAudio.load(envelopeFiles);
+  // const envBuffers = await loaderAudio.load(envelopeFiles);
+  const envBuffers = [0, 1, 0];
 
+  granular.envBuffer = envBuffers;
   //Translate to Float32 and manage memory allocation
-  const envChannels = envBuffers.map(buffer => {
-    const env = new Float32Array(buffer.length);
-    buffer.copyFromChannel(env, 0);
-    return env;
-  });
+  // const envChannels = envBuffers.map(buffer => {
+  //   const env = new Float32Array(buffer.length);
+  //   buffer.copyFromChannel(env, 0);
+  //   return env;
+  // });
 
   //Custom sine envelope
-  const waveArraySize = 1000;
-  const waveArray = new Float32Array(waveArraySize);
-  const phaseIncr = Math.PI / (waveArraySize - 1);
-  let phase = 0;
-  for (let i = 0; i < waveArraySize; i++) {
-    const value = Math.sin(phase);
-    waveArray[i] = value;
-    phase +=  phaseIncr;
-  }
+  // const waveArraySize = 1000;
+  // const waveArray = new Float32Array(waveArraySize);
+  // const phaseIncr = Math.PI / (waveArraySize - 1);
+  // let phase = 0;
+  // for (let i = 0; i < waveArraySize; i++) {
+  //   const value = Math.sin(phase);
+  //   waveArray[i] = value;
+  //   phase +=  phaseIncr;
+  // }
 
-  const envelops = {
-    'Gauss': envChannels[0],
-    'Hanning': envChannels[1],
-    'Tri': envChannels[2],
-    'TrapS': envChannels[3],
-    'TrapL': envChannels[4],
-    'Blackman': envChannels[5],
-    'Expdec': envChannels[6],
-    'Expmod': envChannels[7],
-    'Sine': waveArray,
-  };
+  // const envelops = {
+  //   'Gauss': envChannels[0],
+  //   'Hanning': envChannels[1],
+  //   'Tri': envChannels[2],
+  //   'TrapS': envChannels[3],
+  //   'TrapL': envChannels[4],
+  //   'Blackman': envChannels[5],
+  //   'Expdec': envChannels[6],
+  //   'Expmod': envChannels[7],
+  //   'Sine': waveArray,
+  // };
 
   // Vicentino microtones in cents
   const vicentino = ["0", "76", "117", "193", "269", "310", "386", "462", "503", "620", "696", "772", "813", "889", "965", "1006", "1082", "1158"];
@@ -288,11 +295,11 @@ async function main($container) {
           granular.soundBuffer = sounds[file];
           break;
         }
-        case 'envelopeType': {
-          const type = player.get('envelopeType');
-          granular.envBuffer = envelops[type];
-          break;
-        }
+        // case 'envelopeType': {
+        //   const type = player.get('envelopeType');
+        //   granular.envBuffer = envelops[type];
+        //   break;
+        // }
         case 'granularType': {
           granular.engineType = player.get('granularType');
           break;

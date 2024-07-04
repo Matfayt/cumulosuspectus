@@ -33,30 +33,6 @@ class SwPlayer extends LitElement {
     // create controls for the player state
     return html`
       <h2>Player [id: ${this.player.get('id')}]</h2>
-      <div style="padding-bottom: 4px;">
-        <sc-text>Frequency</sc-text>
-        <sc-slider
-          width="400"
-          min=${this.player.getSchema('frequency').min}
-          max=${this.player.getSchema('frequency').max}
-          value=${this.player.get('frequency')}
-          @input=${e => this.player.set({ frequency: e.detail.value })}
-        ></sc-slider>
-      </div>
-      <div style="padding-bottom: 4px;">
-        <sc-text>Start / Stop synth</sc-text>
-        <sc-toggle
-          ?active=${this.player.get('synthToggle')}
-          @change=${e => this.player.set({ synthToggle: e.detail.value })}
-        ></sc-toggle>
-      </div>
-      <div style="padding-bottom: 4px;">
-        <sc-text>Trigger Synth</sc-text>
-        <sc-bang
-          ?active=${this.player.get('synthTrigger')}
-          @input=${e => this.player.set({ synthTrigger: e.detail.value })}
-        ></sc-bang>
-      </div>
       <div>
         <div style="padding-bottom: 4px"> 
           <sc-text>Start Synth</sc-text> 
