@@ -33,6 +33,10 @@ import FeedbackDelay from './FeedbackDelay.js';
 const audioContext = new AudioContext();
 const config = window.SOUNDWORKS_CONFIG;
 const client = new Client(config);
+//resume audiocontext with user gesture
+client.pluginManager.register('platform-init', pluginPlatformInit, {  
+  audioContext  
+}); 
 
 async function main($container) {
   /**
@@ -75,12 +79,6 @@ async function main($container) {
   const player = await client.stateManager.create('player', {
     id: client.id,
   });
-
-  //resume audiocontext with user gesture
-  client.pluginManager.register('platform-init', pluginPlatformInit, {  
-    audioContext  
-  }); 
-
 
   // //from master to ...
   const master = audioContext.createGain(); 
@@ -303,6 +301,21 @@ async function main($container) {
         case 'granularType': {
           granular.engineType = player.get('granularType');
           break;
+        }
+        case 'preGain': {   
+          const now = audioContext.currentTime;  
+          delay.preGain.gain.setTargetAtTime(value, now, 0.02);  
+          break;  
+        }  
+        case 'feedback': {   
+          const now = audioContext.currentTime;  
+          delay.feedback.gain.setTargetAtTime(value, now, 0.02); 
+          break;  
+        }  
+        case 'delayTime': {   
+          const now = audioContext.currentTime;  
+          delay.setDelayTime(value, now, 0.02);
+          break;  
         }
       } 
     }

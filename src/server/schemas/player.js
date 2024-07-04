@@ -125,4 +125,22 @@ export default {
     default: 'river',
     nullable: true, 
   },
+  preGain: {
+      type: 'float', 
+      default: 0, 
+      min: 0, 
+      max: 1, 
+  },
+  feedback: {
+    type: 'float', 
+    default: 0, 
+    min: 0, 
+    max: 1, 
+  },
+  delayTime: {
+    type: 'float', 
+    default: 0, 
+    min: 0, 
+    max: 1, 
+  },
 }; 

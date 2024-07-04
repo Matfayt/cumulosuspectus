@@ -4,6 +4,7 @@ import { loadConfig, launcher } from '@soundworks/helpers/browser.js';
 import { html, render } from 'lit';
 
 import '../components/sw-audit.js';
+import '../components/sw-player.js';
 
 import '@ircam/sc-components'
 
@@ -27,6 +28,7 @@ async function main($container) {
   await client.start();
 
   const global = await client.stateManager.attach('global');
+  const players = await client.stateManager.getCollection('player');
 
   function renderApp() {
     render(html`
@@ -53,13 +55,20 @@ async function main($container) {
                 ?active=${global.get('mute')} 
                 @change=${e => global.set({ mute: e.detail.value })} 
               ></sc-toggle> 
-            </div> 
+            </div>
+          <div>
+            ${players.map(player => {
+              return html`<sw-player .player=${player}></sw-player>`
+            })} 
         </section>
       </div>
     `, $container);
   }
 
   global.onUpdate(() => renderApp(), true);
+  player.onUpdate(() => renderApp(), true);
+  player.onAttach(() => renderApp(), true);
+  player.onDetach(() => renderApp(), true);
 }
 
 launcher.execute(main, {

@@ -149,6 +149,35 @@ class SwPlayer extends LitElement {
             @input=${e => this.player.set({changeCent: e.detail.value })}
           ></sc-bang>
         </div>
+        <h3>Feedback Delay</h3>
+          <div style="padding-bottom: 4px"> 
+          <div>
+            <sc-text>preGain</sc-text>
+            <sc-slider
+            min=${this.player.getSchema('preGain').min} 
+            max=${this.player.getSchema('preGain').max} 
+            value=${this.player.get('preGain')} 
+            @input=${e => this.player.set({ preGain: e.detail.value })} 
+            ></sc-slider>
+          </div>
+          <div>
+            <sc-text>feedback</sc-text>
+            <sc-slider
+            min=${this.player.getSchema('feedback').min} 
+            max=${this.player.getSchema('feedback').max} 
+            value=${this.player.get('feedback')} 
+            @input=${e => this.player.set({ feedback: e.detail.value })} 
+            ></sc-slider>
+          </div>
+          <div>
+            <sc-text>delayTime</sc-text>
+            <sc-slider
+            min=${this.player.getSchema('delayTime').min} 
+            max=${this.player.getSchema('delayTime').max} 
+            value=${this.player.get('delayTime')} 
+            @input=${e => this.player.set({ delayTime: e.detail.value })} 
+            ></sc-slider>
+          </div>
     `;
   }
 }

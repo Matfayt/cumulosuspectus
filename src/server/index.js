@@ -30,7 +30,7 @@ const server = new Server(config);
 // configure the server for usage within this application template
 server.useDefaultApplicationTemplate();
 
-server.pluginManager.register('platform-init', pluginPlatformInit); 
+server.pluginManager.register('platform-init', pluginPlatformInit);
 
 /**
  * Register plugins and schemas
